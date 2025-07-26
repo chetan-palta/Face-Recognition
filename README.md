@@ -3,7 +3,7 @@
 
 A real-time face recognition system using Python, OpenCV, and the `face_recognition` library.
 
-This project loads a known face (like `chetan.jpeg`) and matches it in real-time from your webcam feed. If a match is found, it displays thegit add README.md name with the accuracy percentage.
+This project loads a known face (like `chetan.jpeg`) and matches it in real-time from your webcam feed. If a match is found, it displays the name with the accuracy percentage.
 
 ---
 

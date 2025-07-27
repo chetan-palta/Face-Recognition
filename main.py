@@ -4,6 +4,7 @@ import os
 import numpy as np
 import time
 from datetime import datetime
+import csv
 
 # === Configuration ===
 KNOWN_FACES_DIR = r'C:\Users\itzch\OneDrive\Desktop\Projects\face_recognition\Face-Recognition\known_faces'
@@ -11,9 +12,9 @@ UNKNOWN_FACES_DIR = r'C:\Users\itzch\OneDrive\Desktop\Projects\face_recognition\
 TOLERANCE = 0.6
 FRAME_THICKNESS = 3
 FONT_THICKNESS = 2
-MODEL = 'hog'  # 'cnn' for GPU
+MODEL = 'hog'  # 'hog' or 'cnn'
 SAVE_UNKNOWN = True
-
+LOG_FILE = "face_log.csv"
 # === Initialization ===
 print("Loading known faces...")
 known_faces = []
@@ -96,6 +97,11 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+
+def log_face(name, accuracy, image_path=""):
+    with open(LOG_FILE, "a", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), name, f"{accuracy:.2f}", image_path])
 # Cleanup
 video.release()
 cv2.destroyAllWindows()

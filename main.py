@@ -5,6 +5,7 @@ import numpy as np
 import time
 from datetime import datetime
 import csv
+import hashlib
 
 # === Config ===
 KNOWN_FACES_DIR = r'known_faces'
@@ -26,13 +27,18 @@ known_names = []
 os.makedirs(UNKNOWN_FACES_DIR, exist_ok=True)
 os.makedirs(BATCH_IMAGES_DIR, exist_ok=True)
 
-for filename in os.listdir(KNOWN_FACES_DIR):
-    path = os.path.join(KNOWN_FACES_DIR, filename)
-    image = face_recognition.load_image_file(path)
-    encodings = face_recognition.face_encodings(image)
-    if encodings:
-        known_faces.append(encodings[0])
-        known_names.append(os.path.splitext(filename)[0])
+# Updated loading for multiple images per person
+for person_name in os.listdir(KNOWN_FACES_DIR):
+    person_dir = os.path.join(KNOWN_FACES_DIR, person_name)
+    if not os.path.isdir(person_dir):
+        continue
+    for filename in os.listdir(person_dir):
+        path = os.path.join(person_dir, filename)
+        image = face_recognition.load_image_file(path)
+        encodings = face_recognition.face_encodings(image)
+        for enc in encodings:
+            known_faces.append(enc)
+            known_names.append(person_name)
 
 # === CSV Log Setup ===
 with open(LOG_FILE, 'w', newline='') as f:
@@ -78,22 +84,31 @@ if mode == 'batch':
 
             # Side-by-side compare
             if name != "Unknown":
-                known_image_path = os.path.join(KNOWN_FACES_DIR, name + '.jpeg')
-                if not os.path.exists(known_image_path):
-                    known_image_path = os.path.join(KNOWN_FACES_DIR, name + '.jpg')
-
-                known_img = cv2.imread(known_image_path)
-                known_img = cv2.resize(known_img, (input_image.shape[1], input_image.shape[0]))
-                comparison = np.hstack((known_img, input_image))
-                cv2.imshow(f"{name} comparison", comparison)
+                # Find first image of this person to compare
+                person_dir = os.path.join(KNOWN_FACES_DIR, name)
+                if os.path.isdir(person_dir):
+                    first_image = next((f for f in os.listdir(person_dir) if f.lower().endswith(('.jpg', '.jpeg'))), None)
+                    if first_image:
+                        known_image_path = os.path.join(person_dir, first_image)
+                        known_img = cv2.imread(known_image_path)
+                        known_img = cv2.resize(known_img, (input_image.shape[1], input_image.shape[0]))
+                        comparison = np.hstack((known_img, input_image))
+                        cv2.imshow(f"{name} comparison", comparison)
             else:
                 cv2.imshow("Unknown", input_image)
 
-            cv2.waitKey(0)
-    cv2.destroyAllWindows()
+            key = cv2.waitKey(1000)  # Show for 1 second
+            if key == 27:  # ESC key to skip early
+                continue
+            elif key == ord('q'):
+                cv2.destroyAllWindows()
+                exit()
+
 
 # === Live Mode ===
 else:
+    recent_unknown_encodings = []
+    UNKNOWN_SAVE_THRESHOLD = 0.6  # Avoid saving same unknown multiple times
     video = cv2.VideoCapture(0)
     prev_time = time.time()
 
@@ -132,15 +147,25 @@ else:
 
             # Save unknown
             if name == "Unknown" and SAVE_UNKNOWN:
-                face_img = frame[top:bottom, left:right]
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                path = os.path.join(UNKNOWN_FACES_DIR, f"unknown_{timestamp}.jpg")
-                cv2.imwrite(path, face_img)
+                # Avoid saving duplicates
+                should_save = True
+                for recent in recent_unknown_encodings:
+                    distance = np.linalg.norm(recent - face_encoding)
+                    if distance < UNKNOWN_SAVE_THRESHOLD:
+                        should_save = False
+                        break
 
-            # Log to CSV
-            with open(LOG_FILE, 'a', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow([datetime.now(), "webcam_frame", name, f"{accuracy:.2f}"])
+                if should_save:
+                    face_img = frame[top:bottom, left:right]
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    path = os.path.join(UNKNOWN_FACES_DIR, f"unknown_{timestamp}.jpg")
+                    cv2.imwrite(path, face_img)
+                    recent_unknown_encodings.append(face_encoding)
+
+                    # Log to CSV
+                    with open(LOG_FILE, 'a', newline='') as f:
+                        writer = csv.writer(f)
+                        writer.writerow([datetime.now(), "webcam_frame", name, f"{accuracy:.2f}"])
 
         # FPS counter
         curr_time = time.time()

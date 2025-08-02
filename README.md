@@ -1,5 +1,4 @@
 
-```markdown
 # 🎯 Face Recognition Project
 
 A real-time face recognition system using Python, OpenCV, and the `face_recognition` library.

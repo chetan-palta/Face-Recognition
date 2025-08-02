@@ -1,9 +1,16 @@
 
+---
+
+```markdown
 # 🎯 Face Recognition Project
 
 A real-time face recognition system using Python, OpenCV, and the `face_recognition` library.
 
-This project loads a known face (like `chetan.jpeg`) and matches it in real-time from your webcam feed. If a match is found, it displays the name with the accuracy percentage.
+This project supports three modes:  
+- **Live:** Real-time webcam recognition  
+- **Batch:** Test a folder of images  
+- **Test:** Run sample test images one by one  
+It logs results, shows accuracy, detects multiple faces, and avoids saving duplicate unknowns.
 
 ---
 
@@ -11,12 +18,14 @@ This project loads a known face (like `chetan.jpeg`) and matches it in real-time
 
 ```
 
-FACE\_RECOGNITION/
-│
-├── Face-Recognition/
-│   ├── known\_faces/          # Store known people (e.g., chetan.jpeg)
-│   ├── unknown\_faces/        # (Optional) Place test images here
-│   └── main.py               # Main script to run webcam-based recognition
+Face-Recognition/
+├── known\_faces/          # Store known people's subfolders (e.g., known\_faces/chetan/\*.jpg)
+├── unknown\_faces/        # Automatically saved unknown faces
+├── batch\_images/         # Batch testing input images
+├── test\_images/          # Sample test images (for test mode)
+├── results\_log.csv       # CSV log of all recognition results
+├── main.py               # Main script for all modes
+└── .gitignore            # Excludes image data from Git history
 
 ````
 
@@ -30,6 +39,7 @@ FACE\_RECOGNITION/
 - numpy
 
 Install dependencies:
+
 ```bash
 pip install opencv-python face_recognition numpy
 ````
@@ -38,41 +48,41 @@ pip install opencv-python face_recognition numpy
 
 ## 🚀 How to Run
 
-1. Place known face images in the `known_faces/` folder (e.g., `chetan.jpeg`).
+1. Place face images in `known_faces/<person_name>/` (e.g., `known_faces/chetan/img1.jpg`)
+
 2. Run the script:
 
    ```bash
    python main.py
    ```
-3. A webcam window will open.
-4. If your face matches a known image, your name and match accuracy will be shown.
-5. Press `q` to quit.
+
+3. Choose one of the modes: `live`, `batch`, or `test`
+
+4. Results will appear in the terminal and optionally in image windows
+
+5. Logs are saved in `results_log.csv`
 
 ---
 
 ## 📌 Features Implemented
 
-* ✅ Real-time webcam face detection
-* ✅ Face matching with accuracy percentage
-* ✅ Matches against all known faces in the folder
-* ✅ Clean exit using `q`
-* ✅ Simple folder-based organization
+* ✅ **Live recognition** with webcam
+* ✅ **Batch mode** for processing multiple images
+* ✅ **Test mode** for checking single sample images
+* ✅ **Accuracy %**, **FPS**, and **face count** display
+* ✅ **Side-by-side comparison** for known matches
+* ✅ **CSV logging** of all recognized faces
+* ✅ **Duplicate prevention** when saving unknowns
+* ✅ Organized folder structure for easy usage
 
 ---
 
 ## 🔧 Upcoming Improvements
 
-* Save logs of matched faces with timestamps
-* Capture & save unknown faces automatically
-* Detect multiple faces in a frame
-* Train from subfolders (for multiple people)
-* GUI version (Tkinter or PyQT)
-
----
-
-## 📸 Sample Output
-
-![Preview](./sample_output.jpg) <!-- Optional screenshot -->
+* GUI-based interface (Tkinter or PyQT)
+* Face training optimization
+* Export logs in Excel/PDF format
+* Face recognition tuning for low-light environments
 
 ---
 
@@ -80,14 +90,17 @@ pip install opencv-python face_recognition numpy
 
 * [face\_recognition](https://github.com/ageitgey/face_recognition)
 * [OpenCV](https://opencv.org/)
-* Author: Chetan Palta
+* Author: **Chetan Palta**
 
 ---
 
 ## 📄 License
 
-📄 Licensed under the [MIT License](./LICENSE)
+Licensed under the [MIT License](./LICENSE)
 
 ```
 
 ---
+
+
+```

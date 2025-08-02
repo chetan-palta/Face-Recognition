@@ -16,7 +16,7 @@ LOG_FILE = 'results_log.csv'
 TOLERANCE = 0.6
 FRAME_THICKNESS = 3
 FONT_THICKNESS = 2
-MODEL = 'hog'
+MODEL = 'cnn'  # 'hog' or 'cnn'
 SAVE_UNKNOWN = True
 
 # === Load Known Faces ===
@@ -46,7 +46,7 @@ with open(LOG_FILE, 'w', newline='') as f:
     writer.writerow(['Timestamp', 'Image', 'Name', 'Accuracy'])
 
 # === Mode Selection ===
-mode = input("Choose mode - [live / batch]: ").strip().lower()
+mode = input("Choose mode - [live / batch / test]: ").strip().lower()
 
 
 # === Batch Mode ===
@@ -87,7 +87,7 @@ if mode == 'batch':
                 # Find first image of this person to compare
                 person_dir = os.path.join(KNOWN_FACES_DIR, name)
                 if os.path.isdir(person_dir):
-                    first_image = next((f for f in os.listdir(person_dir) if f.lower().endswith(('.jpg', '.jpeg'))), None)
+                    first_image = next((f for f in os.listdir(person_dir) if f.lower().endswith(('.jpg', '.jpeg', ',.png'))), None)
                     if first_image:
                         known_image_path = os.path.join(person_dir, first_image)
                         known_img = cv2.imread(known_image_path)
@@ -97,13 +97,48 @@ if mode == 'batch':
             else:
                 cv2.imshow("Unknown", input_image)
 
-            key = cv2.waitKey(1000)  # Show for 1 second
+            print("Press any key to continue, 'q' to quit.")
+            key = cv2.waitKey(0)
             if key == 27:  # ESC key to skip early
                 continue
             elif key == ord('q'):
                 cv2.destroyAllWindows()
                 exit()
 
+elif mode == 'test':
+    TEST_IMAGES_DIR = 'test_images'
+    for image_file in os.listdir(TEST_IMAGES_DIR):
+        image_path = os.path.join(TEST_IMAGES_DIR, image_file)
+        input_image = face_recognition.load_image_file(image_path)
+        rgb = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+
+        locations = face_recognition.face_locations(rgb, model=MODEL)
+        encodings = face_recognition.face_encodings(rgb, locations)
+
+        for face_encoding, face_location in zip(encodings, locations):
+            matches = face_recognition.compare_faces(known_faces, face_encoding, tolerance=TOLERANCE)
+            distances = face_recognition.face_distance(known_faces, face_encoding)
+
+            name = "Unknown"
+            accuracy = 0.0
+
+            if True in matches:
+                best_match_index = np.argmin(distances)
+                name = known_names[best_match_index]
+                accuracy = (1 - distances[best_match_index]) * 100
+
+            # Draw
+            top, right, bottom, left = face_location
+            cv2.rectangle(input_image, (left, top), (right, bottom), (0, 255, 0), 2)
+            label = f"{name} ({accuracy:.2f}%)"
+            cv2.putText(input_image, label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+        cv2.imshow(image_file, input_image)
+        print("Press any key to continue, 'q' to quit.")
+        key = cv2.waitKey(0)
+        if key == ord('q'):
+            cv2.destroyAllWindows()
+            exit()
 
 # === Live Mode ===
 else:
@@ -111,6 +146,10 @@ else:
     UNKNOWN_SAVE_THRESHOLD = 0.6  # Avoid saving same unknown multiple times
     video = cv2.VideoCapture(0)
     prev_time = time.time()
+
+    video.set(cv2.CAP_PROP_FPS, 30)
+    video.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    video.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     print("Starting webcam. Press 'q' to exit.")
     while True:

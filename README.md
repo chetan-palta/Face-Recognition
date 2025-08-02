@@ -80,13 +80,13 @@ pip install opencv-python face_recognition numpy
 
 * [face\_recognition](https://github.com/ageitgey/face_recognition)
 * [OpenCV](https://opencv.org/)
-* Author: Only Chetan
+* Author: Chetan Palta
 
 ---
 
 ## 📄 License
 
-MIT License. Use freely with credit.
+📄 Licensed under the [MIT License](./LICENSE)
 
 ```
 

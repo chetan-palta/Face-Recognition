@@ -1,6 +1,4 @@
 
----
-
 ```markdown
 # 🎯 Face Recognition Project
 
@@ -97,10 +95,3 @@ pip install opencv-python face_recognition numpy
 ## 📄 License
 
 Licensed under the [MIT License](./LICENSE)
-
-```
-
----
-
-
-```
